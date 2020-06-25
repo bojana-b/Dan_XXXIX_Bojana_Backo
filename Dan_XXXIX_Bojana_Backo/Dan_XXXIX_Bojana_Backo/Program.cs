@@ -10,6 +10,11 @@ namespace Dan_XXXIX_Bojana_Backo
     {
         static void Main(string[] args)
         {
+            Menu.Begin();
+
+
+
+            Console.ReadLine();
         }
     }
 }
