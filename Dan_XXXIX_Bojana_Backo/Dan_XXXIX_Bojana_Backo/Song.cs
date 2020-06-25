@@ -12,8 +12,8 @@ namespace Dan_XXXIX_Bojana_Backo
     public class Song
     {
         string Author { get; set; }
-        string Name { get; set; }
-        string Duration { get; set; }
+        public string Name { get; set; }
+        public string Duration { get; set; }
 
         public Song()
         {
