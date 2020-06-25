@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,8 +10,11 @@ namespace Dan_XXXIX_Bojana_Backo
 {
     static class Menu
     {
-        public static List<string> playlist = new List<string>();
+        public static List<Song> playlist = new List<Song>();
         public static string fileMusic = @"..\..\Music.txt";
+        public static string author;
+        public static string name;
+        public static string duration;
         /// <summary>
         ///  Function to be called at the begining od app
         /// </summary>
@@ -41,6 +45,8 @@ namespace Dan_XXXIX_Bojana_Backo
                     num = Int32.Parse(input);
                     switch (num)
                     {
+                        case 1: ReadFromFileMusic();
+                            break;
                         case 2: CreateNewPlaylist();
                             break;
                         default:
@@ -61,12 +67,11 @@ namespace Dan_XXXIX_Bojana_Backo
                 File.Delete(fileMusic);
                 using (StreamWriter sw = File.CreateText(fileMusic))
                 {
-                    //foreach (var item in routesToDestination)
-                    //{
-                    //    sw.WriteLine(item);
-                    //}
+                    foreach (var item in playlist)
+                    {
+                        sw.WriteLine(item);
+                    }
                     sw.Close();
-                    //Console.WriteLine(Thread.CurrentThread.Name + " has finished writing to the file!");
                 }
 
             }
@@ -100,7 +105,7 @@ namespace Dan_XXXIX_Bojana_Backo
                     }
                     else
                     {
-                        playlist.Add(input);
+                        author = input;
                         b = false;
                     }
                 } while (b);
@@ -115,27 +120,38 @@ namespace Dan_XXXIX_Bojana_Backo
                     }
                     else
                     {
-                        playlist.Add(input);
+                        name = input;
                         b = false;
                     }
                 } while (b);
                 do
                 {
-                    Console.Write("\nDuration [format 00:00:00]: ");
+                    Console.Write("\nDuration [format hh:mm:ss]: ");
                     string input = Console.ReadLine();
+                    string format = "g";
+                    bool valid = TimeSpan.TryParseExact(input, format, CultureInfo.InvariantCulture, out TimeSpan timeSpan);
+                    Console.WriteLine(valid);
                     if (string.IsNullOrEmpty(input))
                     {
                         Console.WriteLine("\nYou must provide some input!");
                         b = true;
                     }
+                    else if (!valid)
+                    {
+                        Console.WriteLine("\nNot valid format!!!!");
+                        b = true;
+                    }
                     else
                     {
-                        playlist.Add(input);
+                        duration = timeSpan.ToString();
                         b = false;
                     }
                 } while (b);
             } while (repeat);
 
+            Song song = new Song(author, name, duration);
+            Console.WriteLine(song.ToString());
+            playlist.Add(song);
             do
             {
                 Console.Write("\nAdd another one: Y / N  ->  ");
@@ -147,7 +163,7 @@ namespace Dan_XXXIX_Bojana_Backo
                 }
                 else
                 {
-                    if (input.Equals("Y"))
+                    if (string.Equals(input, "Y", StringComparison.OrdinalIgnoreCase))
                     {
                         CreateNewPlaylist();
                         repeat = false;
@@ -158,7 +174,45 @@ namespace Dan_XXXIX_Bojana_Backo
                     }
                 }
             } while (repeat);
+            WriteToFileMusic();
         }
 
+        /// <summary>
+        /// Function that Read from file Music.txt and load to screen
+        /// </summary>
+        public static void ReadFromFileMusic()
+        {
+            try
+            {
+                using (StreamReader streamReader = new StreamReader(fileMusic))
+                {
+                    string line;
+                    while ((line = streamReader.ReadLine()) != null)
+                    {
+                        string[] lines = line.Split(']');
+                        string songAuthor = lines.ElementAt(0);
+                        songAuthor = songAuthor.Replace("[", "");
+                        string songName = lines.ElementAt(1);
+                        songName = songName.Replace("[", "");
+                        songName = songName.Replace(":", "");
+                        string songDuration = lines.ElementAt(2);
+                        songDuration = songDuration.Replace("[", "");
+                        playlist.Add(new Song(songAuthor, songName, songDuration));
+                    }
+                    foreach (var item in playlist)
+                    {
+                        Console.WriteLine(item.ToString());
+                    }
+                }
+            }
+            catch (FileNotFoundException e)
+            {
+                Console.WriteLine($"The file was not found: '{e}'");
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine($"The file could not be opened: '{e}'");
+            }
+        }
     }
 }
